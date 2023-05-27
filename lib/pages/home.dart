@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -8,14 +10,44 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+
   String _userTODO = '';
   List todoList = [];
+
+  void initFirebase() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
+  }
 
   @override
   void initState() {
     super.initState();
 
-    todoList.addAll(['Buy milk', 'Wash disches', 'Сходить в магазин']);
+    initFirebase();
+
+    todoList.addAll(['Buy milk', 'Wash disches', 'Сходить в магазин', 'check check', 'hello']);
+  }
+
+  void _menuOpen(){
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (BuildContext context){
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('Menu'),
+          ),
+          body: Row(
+            children: [
+              ElevatedButton(onPressed: (){
+                Navigator.pop(context);
+                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+              }, child: Text('На главную')),
+              Padding(padding: EdgeInsets.only(left: 15)),
+              Text('Наше простое меню'),
+            ],
+          ),
+        );
+      })
+    );
   }
 
   @override
@@ -25,6 +57,11 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         title: Text("Список дел"),
         centerTitle: true,
+        actions: [
+          IconButton(
+              onPressed: _menuOpen,
+              icon: Icon(Icons.menu)
+          )],
       ),
       body: ListView.builder(
         itemCount: todoList.length,
@@ -70,10 +107,8 @@ class _HomeState extends State<Home> {
               ),
               actions: [
                 ElevatedButton(onPressed: (){
-                  setState(() {
-                    todoList.add(_userTODO);
-                  });
-
+                  FirebaseFirestore.instance.collection('items').add({'item': _userTODO});
+                  
                   Navigator.of(context).pop();
                 }, child: Text('Добавить'))
               ],
